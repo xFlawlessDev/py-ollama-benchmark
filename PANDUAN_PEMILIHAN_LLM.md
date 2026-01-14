@@ -1,7 +1,8 @@
 # Panduan Komprehensif Pemilihan Model LLM dan Embedding untuk Infrastruktur Lokal
 
-**Versi Dokumen:** 1.0  
-**Target Audiens:** DevOps Engineer, AI Infrastructure Architect  
+**Versi Dokumen:** 1.1
+**Tanggal Update:** 14 Januari 2026
+**Target Audiens:** DevOps Engineer, AI Infrastructure Architect
 **Fokus:** Self-Hosted Inference (High-Performance Workstation/Server)
 
 ---
@@ -48,7 +49,7 @@ Kuantisasi adalah faktor paling kritikal untuk menjalankan model Medium/Large di
 ### 2.3 Context Window & KV Cache
 Panjang konteks (misal: 8k vs 128k token) bukan hanya fitur, tapi beban infrastruktur.
 *   **Linear/Quadratic Growth**: Konsumsi memori untuk menyimpan konteks (KV Cache) tumbuh seiring panjangnya input.
-*   **KV Cache Quantization**: Pada konteks sangat panjang (long-context RAG), pertimbangkan menggunakan **FP8 KV Cache** (opsiteredia di vLLM/llama.cpp) untuk menghemat VRAM hingga 2x tanpa degradasi berarti.
+*   **KV Cache Quantization**: Pada konteks sangat panjang (long-context RAG), pertimbangkan menggunakan **FP8 KV Cache** (opsi tersedia di vLLM/llama.cpp) untuk menghemat VRAM hingga 2x tanpa degradasi berarti.
 
 ---
 
@@ -63,9 +64,11 @@ Gunakan acuan **MTEB (Massive Text Embedding Benchmark)**. Jangan terpaku pada m
 1.  **Sequence Length**:
     *   **512 tokens**: Cukup untuk pencarian kalimat/paragraf pendek.
     *   **8192 tokens**: Diperlukan untuk *full document retrieval* atau legal/medical docs (Contoh: `nomic-embed-text-v1.5`, `jina-embeddings-v3`).
+    *   **32K - 40K tokens**: Model embedding terbaru seperti `qwen3-embedding` mendukung konteks sangat panjang, ideal untuk whole-document indexing.
 2.  **Dimensi Vektor**:
     *   Semakin besar dimensi (misal: 1024 vs 384), semakin akurat nuansa semantiknya, TAPI memperbesar ukuran indeks Vector DB dan memperlambat pencarian (latency).
-    *   **Rekomendasi**: Dimensi 768 (sekelas `bge-base-en-v1.5`) adalah keseimbangan terbaik untuk mayoritas aplikasi enterprise.
+    *   **Rekomendasi Klasik**: Dimensi 768 (sekelas `bge-base-en-v1.5`) adalah keseimbangan terbaik untuk mayoritas aplikasi enterprise.
+    *   **Rekomendasi Modern**: Model seperti `qwen3-embedding` mendukung dimensi fleksibel (32 hingga 4096), memungkinkan Anda menyesuaikan trade-off akurasi vs efisiensi sesuai kebutuhan spesifik.
 
 ### 3.3 Model Embedding Terbaru dari Ollama (Q1 2026)
 
@@ -342,3 +345,90 @@ Memilih model adalah tentang menyeimbangkan ambisi kecerdasan dengan realitas fi
 
 **Saran Terakhir:**
 Untuk setup **Ryzen AI Max 395**, jangan ragu untuk menggunakan model **70B parameter** dengan kuantisasi **Q4_K_M**. Ini memberikan lompatan kecerdasan yang jauh lebih berharga daripada menjalankan model kecil (8B) dengan kecepatan kilat namun logika terbatas.
+
+---
+
+## 9. Referensi & Sumber Pendukung
+
+Bagian ini menyediakan referensi artikel dan dokumentasi teknis yang mendukung rekomendasi dalam panduan ini.
+
+### 9.1 Kuantisasi Model (GGUF, Q4_K_M)
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **Unsloth Dynamic GGUFs Benchmark** | Analisis performa kuantisasi dinamis pada Aider Polyglot Benchmark, menunjukkan bahwa 4-bit quantization mempertahankan ~98% akurasi model asli. | [unsloth.ai](https://unsloth.ai/docs/basics/unsloth-dynamic-2.0-ggufs/unsloth-dynamic-ggufs-on-aider-polyglot) |
+| **Green LLM Techniques (arXiv)** | Studi akademis tentang efek kuantisasi terhadap konsumsi energi dan trade-off akurasi pada edge inference. | [arxiv.org/html/2601.02512v1](https://arxiv.org/html/2601.02512v1) |
+| **RTX 4090 vs RX 7900 XTX Local LLM** | Perbandingan langsung performa Q4_K_M pada hardware berbeda, mengkonfirmasi "sweet spot" kuantisasi Q4-Q5. | [alibaba.com](https://www.alibaba.com/product-insights/nvidia-rtx-4090-vs-amd-rx-7900-xtx-for-local-llm-inference-which-gpu-delivers-smoother-chatbot-performance.html) |
+
+> **Kutipan Kunci**: *"Start with Q4_K_M for 7B models and Q5_K_S for 13B. Avoid Q2_K or Q3_K unless VRAM is critically constrained—they degrade coherence more than they improve speed."* — Alibaba Product Insights
+
+### 9.2 Model Embedding & MTEB Benchmark
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **Qwen3-Embedding MTEB #1** | Dokumentasi resmi SiliconFlow mengkonfirmasi Qwen3-Embedding-8B sebagai #1 di MTEB Multilingual Leaderboard (skor 70.58, Juni 2025). | [siliconflow.com/models/llm](https://www.siliconflow.com/models/llm) |
+| **C2LLM MTEB-Code Benchmark** | Technical report menunjukkan perbandingan model embedding pada code retrieval tasks. | [arxiv.org/pdf/2512.21332](https://arxiv.org/pdf/2512.21332) |
+| **Best Embedding Models 2026** | Review komprehensif 10 model embedding terbaik termasuk Qwen3, BGE-M3, dan Nomic Embed. | [openxcell.com/blog/best-embedding-models](https://www.openxcell.com/blog/best-embedding-models/) |
+| **MTEB Official Repository** | Repository resmi benchmark MTEB dengan hasil evaluasi terbaru. | [github.com/embeddings-benchmark/mteb](https://github.com/embeddings-benchmark/mteb/releases) |
+| **EmbeddingRWKV MTEB Comparison** | Tabel perbandingan detail model embedding pada MTEB English v2. | [arxiv.org/html/2601.07861v1](https://arxiv.org/html/2601.07861v1) |
+
+> **Kutipan Kunci**: *"The 4B and 8B Qwen3 models outperform others and fit well with RAG and enterprise pipelines... multilingual capabilities supporting over 100 languages."* — OpenXCell Blog
+
+### 9.3 KV Cache & Manajemen Memori
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **DigitalOcean AMD Technical Deep Dive** | Panduan praktis penggunaan FP8 KV Cache untuk ~50% VRAM reduction dengan vLLM. | [digitalocean.com/blog](https://www.digitalocean.com/blog/technical-deep-dive-character-ai-amd) |
+| **GPU-Accelerated INT8 KV Cache (arXiv)** | Studi implementasi INT8 quantization untuk KV cache dengan 4x memory savings. | [arxiv.org/html/2601.04719v1](https://arxiv.org/html/2601.04719v1) |
+| **PyTorch/torchao Serving Guide** | Dokumentasi resmi PyTorch tentang quantization dan memory optimization. | [docs.pytorch.org/ao/stable/serving](https://docs.pytorch.org/ao/stable/serving.html) |
+
+> **Kutipan Kunci**: *"Using FP8 for KV cache explicitly has some benefits, including lower VRAM usage (~50% reduction), better throughput due to reduced memory bandwidth pressure, and more capacity for handling a higher number of concurrent users."* — DigitalOcean Technical Blog
+
+### 9.4 vLLM & Continuous Batching
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **Serving LLMs with vLLM: A Practical Guide** | Panduan komprehensif vLLM termasuk PagedAttention, continuous batching, dan quantization support. | [nebius.com/blog](https://nebius.com/blog/posts/serving-llms-with-vllm-practical-guide) |
+| **Choosing the Right LLM Inference Framework** | Perbandingan 6 framework inferensi utama dengan benchmark throughput dan latency. | [ranjankumar.in](https://ranjankumar.in/choosing-the-right-llm-inference-framework-a-practical-guide/) |
+| **LLM Serving with vLLM (Medium)** | Studi kasus implementasi vLLM dengan hasil 5x throughput improvement. | [medium.com](https://ammarab.medium.com/llm-serving-with-vllm-23e3b1e0c617) |
+| **PagedAttention Paper (SOSP 2023)** | Paper akademis asli tentang algoritma PagedAttention. | arXiv:2309.06180 |
+| **Qwen3-30B Consumer-Grade Benchmark** | Benchmark empiris PagedAttention dan continuous batching pada hardware konsumer. | [arxiv.org/html/2512.23029v1](https://arxiv.org/html/2512.23029v1) |
+
+> **Kutipan Kunci**: *"In published benchmarks and production deployments, vLLM typically delivers throughput in the 120-160 requests per second range with 50-80ms time to first token. What makes vLLM special isn't raw speed—but how well it handles concurrency."* — Choosing the Right LLM Inference Framework
+
+### 9.5 AMD Ryzen AI Max 395 (Strix Halo)
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **TechPowerUp Strix Halo Coverage** | Kompilasi berita tentang Strix Halo termasuk spesifikasi 128GB unified memory dan 96GB VRAM allocation. | [techpowerup.com](https://www.techpowerup.com/news-tags/Strix%20Halo) |
+| **Running DeepSeek-OCR on Strix Halo** | Studi kasus real-world menjalankan VLM pada Ryzen AI Max+ 395 dengan 105GB+ VRAM allocation. | [linkedin.com](https://www.linkedin.com/pulse/running-deepseek-ocr-locally-amd-strix-halo-journey-local-wong-b83ve) |
+| **Best Hardware for Running Local AI** | Review perbandingan Ryzen AI Max+ 395 vs NVIDIA DGX Spark untuk local LLM workloads. | [tweaktown.com](https://www.tweaktown.com/articles/11301/the-best-hardware-for-running-local-ai/index.html) |
+| **Corsair AI Workstation 300** | Spesifikasi sistem berbasis Strix Halo untuk AI workflows dengan dukungan LM Studio. | [techpowerup.com](https://www.techpowerup.com/news-tags/Strix%20Halo) |
+
+> **Kutipan Kunci**: *"With up to 128 GB of unified LPDDR5X memory (96 GB can be dynamically allocated as VRAM), it supports large-scale model inference workloads that standard desktop GPUs simply can't handle."* — TechPowerUp
+
+### 9.6 Model LLM (Llama-3, DeepSeek-R1)
+
+| Referensi | Deskripsi | URL |
+| :--- | :--- | :--- |
+| **DeepSeek R1 Local Deployment Guide** | Panduan lengkap VRAM requirements untuk semua varian DeepSeek-R1 Distill. | [jan.ai](https://jan.ai/post/deepseek-r1-locally) |
+| **DeepSeek-R1 Fine-tuning Technical Guide** | Penjelasan teknis arsitektur dan kuantisasi DeepSeek-R1. | [oreateai.com](https://www.oreateai.com/blog/indepth-explanation-of-deepseekr1-inference-model-finetuning-technology/2d17841e19e04313f6211eef1f6aa757) |
+| **Local Computer Use Agents Performance** | Benchmark performa berbagai model termasuk DeepSeek-R1, Qwen3, Llama pada berbagai GPU. | [tallyfy.com](https://tallyfy.com/products/pro/integrations/computer-ai-agents/local-computer-use-agents/) |
+| **IBM watsonx Foundation Models** | Dokumentasi spesifikasi DeepSeek-R1-Distill-Llama-70B dengan 131K context window. | [ibm.com](https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-details.html) |
+
+> **Kutipan Kunci**: *"DeepSeek-R1-Distill-Llama-70B is a model fine-tuned based on the open-source model Llama-3.1-70B using data generated by DeepSeek-R1... Context window length: 131,072 tokens."* — IBM watsonx Docs
+
+### 9.7 Referensi Akademis
+
+| Paper | Penulis/Institusi | Tahun |
+| :--- | :--- | :--- |
+| **Efficient Memory Management for LLM Serving with PagedAttention** | Kwon et al., UC Berkeley | SOSP 2023 |
+| **BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity** | Chen et al., BAAI | 2024 |
+| **MTEB: Massive Text Embedding Benchmark** | Muennighoff et al. | 2023 |
+| **Orca: A Distributed Serving System for Transformer-Based Models** | Yu et al. | OSDI 2022 |
+| **MMTEB: Massive Multilingual Text Embedding Benchmark** | Enevoldsen et al. | ICLR 2025 |
+
+---
+
+**Catatan Validasi:**
+Semua rekomendasi dalam dokumen ini telah divalidasi dengan referensi industri dan akademis terkini (per Januari 2026). Untuk update terbaru, disarankan untuk memantau MTEB Leaderboard, vLLM GitHub repository, dan dokumentasi resmi vendor hardware.
