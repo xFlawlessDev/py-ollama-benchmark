@@ -67,10 +67,52 @@ Gunakan acuan **MTEB (Massive Text Embedding Benchmark)**. Jangan terpaku pada m
     *   Semakin besar dimensi (misal: 1024 vs 384), semakin akurat nuansa semantiknya, TAPI memperbesar ukuran indeks Vector DB dan memperlambat pencarian (latency).
     *   **Rekomendasi**: Dimensi 768 (sekelas `bge-base-en-v1.5`) adalah keseimbangan terbaik untuk mayoritas aplikasi enterprise.
 
-### 3.3 Rekomendasi Model (Q1 2026)
-*   **Best Overall < 1GB**: `bge-m3` (Multilingual, 8192 context).
-*   **Best Speed/Performance**: `nomic-embed-text-v1.5` (Matryoshka supported - dimensi bisa dipotong).
-*   **Best Indonesian Support**: `intfloat/multilingual-e5-large`.
+### 3.3 Model Embedding Terbaru dari Ollama (Q1 2026)
+
+#### A. EmbeddingGemma (Google)
+Model embedding kompak 300M parameter dari Google, dibangun dari Gemma 3 dengan inisialisasi T5Gemma.
+
+| Spesifikasi | Detail |
+| :--- | :--- |
+| **Parameter** | 300M |
+| **Ukuran File** | 622 MB |
+| **Context Window** | 2K tokens |
+| **Bahasa** | 100+ bahasa |
+| **Training Data** | ~320 billion tokens |
+
+*   **Kelebihan**:
+    *   Ukuran sangat kecil, cocok untuk deployment on-device (mobile, laptop, desktop).
+    *   State-of-the-art untuk ukuran kelasnya.
+    *   Sangat baik untuk search, retrieval, classification, clustering, dan semantic similarity.
+*   **Use Case**: Aplikasi edge computing, mobile apps, atau skenario dengan resource terbatas.
+
+#### B. Qwen3-Embedding (Alibaba)
+Seri model embedding komprehensif dari Qwen3, tersedia dalam berbagai ukuran untuk fleksibilitas deployment.
+
+| Varian | Ukuran File | Context Window | Embedding Dimension |
+| :--- | :--- | :--- | :--- |
+| **qwen3-embedding:0.6b** | 639 MB | 32K tokens | Up to 4096 |
+| **qwen3-embedding:4b** | 2.5 GB | 40K tokens | Up to 4096 |
+| **qwen3-embedding:8b** | 4.7 GB | 40K tokens | Up to 4096 |
+
+*   **Kelebihan**:
+    *   **#1 di MTEB Multilingual Leaderboard** (Skor 70.58, per Juni 2025) untuk varian 8B.
+    *   Context window sangat panjang (32K-40K), ideal untuk full document retrieval.
+    *   Dimensi embedding fleksibel (32 hingga 4096), bisa disesuaikan dengan kebutuhan.
+    *   Mendukung 100+ bahasa termasuk bahasa pemrograman.
+    *   Kemampuan multilingual, cross-lingual, dan code retrieval yang kuat.
+*   **Use Case**: Text retrieval, code retrieval, text classification, text clustering, bitext mining.
+
+### 3.4 Rekomendasi Model Embedding (Q1 2026)
+
+| Kategori | Model Rekomendasi | Catatan |
+| :--- | :--- | :--- |
+| **Best MTEB Score** | `qwen3-embedding:8b` | #1 Multilingual Leaderboard (70.58) |
+| **Best Long Context** | `qwen3-embedding:4b` / `qwen3-embedding:8b` | 40K context window |
+| **Best Compact (<1GB)** | `embeddinggemma` atau `qwen3-embedding:0.6b` | Ideal untuk on-device/edge |
+| **Best Speed/Performance** | `nomic-embed-text-v1.5` | Matryoshka supported |
+| **Best Indonesian Support** | `intfloat/multilingual-e5-large` atau `qwen3-embedding` | Multilingual 100+ bahasa |
+| **Best Overall Balance** | `bge-m3` | Multilingual, 8192 context |
 
 ---
 
